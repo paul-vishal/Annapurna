@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import Logo from '../components/Logo';
 
 const COMMON_ITEMS = [
   { name: 'Onion', category: 'vegetables', unit: 'kg', icon: '🧅' },
@@ -173,7 +172,7 @@ function Inventory() {
       dairy: 'bg-blue-100 text-blue-800',
       protein: 'bg-red-100 text-red-800',
       oil: 'bg-amber-100 text-amber-800',
-      spices: 'bg-orange-100 text-orange-800',
+      spices: 'bg-orange-100 text-purple-800',
       other: 'bg-gray-100 text-gray-800'
     };
     return colors[category] || colors.other;
@@ -195,16 +194,20 @@ function Inventory() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-white">
       {/* Header */}
-      <header className="bg-white shadow-md border-b border-orange-100 mb-8">
+      <header className="bg-white shadow-md border-b border-purple-100 mb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-3">
-              <Logo className="w-12 h-12" />
+              <img
+                src="/Annapurna.png"
+                alt="Annapurna Logo"
+                className="w-20 h-20 drop-shadow-lg mix-blend-multiply"
+              />
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
-                  MealVP
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
+                  Annapurna
                 </h1>
                 <p className="text-sm text-gray-600">Pantry Inventory</p>
               </div>
@@ -227,7 +230,7 @@ function Inventory() {
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="px-6 py-3 bg-gradient-to-r from-orange-600 to-orange-500 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition duration-200"
+            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition duration-200"
           >
             + Add Custom Item
           </button>
@@ -241,7 +244,7 @@ function Inventory() {
               <button
                 key={index}
                 onClick={() => handleQuickAdd(item)}
-                className="flex flex-col items-center gap-1 p-2 bg-gradient-to-br from-orange-50 to-orange-50 border border-orange-200 rounded-lg hover:shadow-md transition duration-200 hover:border-orange-400 hover:scale-105"
+                className="flex flex-col items-center gap-1 p-2 bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-lg hover:shadow-md transition duration-200 hover:border-purple-400 hover:scale-105"
               >
                 <span className="text-2xl">{item.icon}</span>
                 <span className="text-xs font-medium text-gray-700 text-center leading-tight">{item.name}</span>
@@ -309,7 +312,7 @@ function Inventory() {
                             </h3>
                           </div>
 
-                          <p className="text-lg font-bold text-orange-600 mb-1">
+                          <p className="text-lg font-bold text-purple-600 mb-1">
                             {item.quantity} {item.unit}
                           </p>
 
@@ -351,7 +354,7 @@ function Inventory() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                   placeholder="e.g., Onion"
                 />
               </div>
@@ -365,7 +368,7 @@ function Inventory() {
                     value={formData.quantity}
                     onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                     placeholder="1"
                   />
                 </div>
@@ -375,7 +378,7 @@ function Inventory() {
                   <select
                     value={formData.unit}
                     onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                   >
                     {UNITS.map(unit => (
                       <option key={unit} value={unit}>{unit}</option>
@@ -389,7 +392,7 @@ function Inventory() {
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                 >
                   {CATEGORIES.map(cat => (
                     <option key={cat} value={cat}>{cat}</option>
@@ -403,7 +406,7 @@ function Inventory() {
                   type="date"
                   value={formData.expiryDate}
                   onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                 />
               </div>
 
@@ -412,7 +415,7 @@ function Inventory() {
                 <textarea
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                   rows="2"
                   placeholder="Any additional notes..."
                 />
@@ -428,7 +431,7 @@ function Inventory() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-600 text-white rounded-lg hover:shadow-lg transition font-medium"
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:shadow-lg transition font-medium"
                 >
                   {editingItem ? 'Update' : 'Add'} Item
                 </button>

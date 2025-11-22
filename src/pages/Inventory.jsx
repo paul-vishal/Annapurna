@@ -206,7 +206,7 @@ function Inventory() {
                 className="w-20 h-20 drop-shadow-lg mix-blend-multiply"
               />
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent" style={{ fontFamily: "'Dancing Script', cursive" }}>
                   Annapurna
                 </h1>
                 <p className="text-sm text-gray-600">Pantry Inventory</p>

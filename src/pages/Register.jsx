@@ -57,11 +57,11 @@ function Register() {
               className="w-32 h-32 drop-shadow-2xl mix-blend-multiply"
             />
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent mb-2">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent mb-4" style={{ fontFamily: "'Dancing Script', cursive" }}>
             Annapurna
           </h1>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-2">Create Account</h2>
-          <p className="text-gray-600">Start planning your meals today</p>
+          <p className="text-2xl text-gray-600 mb-4" style={{ fontFamily: "'Dancing Script', cursive" }}>Your Divine Kitchen Companion</p>
+          <h2 className="text-2xl font-semibold text-gray-800">Create Account</h2>
         </div>
 
         {/* Card */}

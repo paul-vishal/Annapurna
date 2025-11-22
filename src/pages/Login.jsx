@@ -49,11 +49,10 @@ function Login() {
               className="w-32 h-32 drop-shadow-2xl mix-blend-multiply"
             />
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent mb-2">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent mb-4" style={{ fontFamily: "'Dancing Script', cursive" }}>
             Annapurna
           </h1>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-2">Welcome Back</h2>
-          <p className="text-gray-600">Sign in to continue to your meal planner</p>
+          <p className="text-2xl text-gray-600" style={{ fontFamily: "'Dancing Script', cursive" }}>Your Divine Kitchen Companion</p>
         </div>
 
         {/* Card */}

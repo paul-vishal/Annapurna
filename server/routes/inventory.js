@@ -30,6 +30,21 @@ router.post('/', protect, async (req, res) => {
   try {
     const { name, category, quantity, unit, expiryDate, notes } = req.body;
 
+    const existingItem = await InventoryItem.findOne({
+      user: req.user._id,
+      name: { $regex: new RegExp(`^${name}$`, 'i') },
+      unit
+    });
+
+    if (existingItem) {
+      existingItem.quantity = Number(existingItem.quantity) + Number(quantity);
+      if (expiryDate) existingItem.expiryDate = expiryDate;
+      if (notes) existingItem.notes = notes;
+      if (category) existingItem.category = category;
+      await existingItem.save();
+      return res.status(200).json(existingItem);
+    }
+
     const item = await InventoryItem.create({
       user: req.user._id,
       name,

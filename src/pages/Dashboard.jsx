@@ -1,9 +1,32 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 function Dashboard() {
-  const { user, logout } = useAuth();
+  const { user, logout, token } = useAuth();
   const navigate = useNavigate();
+  const [inventoryCount, setInventoryCount] = useState(0);
+
+  useEffect(() => {
+    fetchInventoryCount();
+  }, []);
+
+  const fetchInventoryCount = async () => {
+    try {
+      const response = await fetch('http://localhost:5001/api/inventory', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setInventoryCount(data.length);
+      }
+    } catch (error) {
+      console.error('Error fetching inventory count:', error);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -52,16 +75,19 @@ function Dashboard() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-6 rounded-xl border border-emerald-200 text-center">
+            <button
+              onClick={() => navigate('/inventory')}
+              className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-6 rounded-xl border border-emerald-200 text-center hover:shadow-lg hover:border-emerald-400 transition duration-200 cursor-pointer"
+            >
               <div className="flex justify-center mb-4">
                 <span className="text-5xl">📦</span>
               </div>
               <h3 className="text-lg font-semibold text-gray-800 mb-2">Inventory Items</h3>
-              <p className="text-4xl font-bold text-emerald-600 mb-3">0</p>
+              <p className="text-4xl font-bold text-emerald-600 mb-3">{inventoryCount}</p>
               <span className="inline-block text-xs font-semibold text-emerald-700 bg-emerald-200 px-3 py-1 rounded-full">
-                Coming Soon
+                Click to Manage
               </span>
-            </div>
+            </button>
 
             <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border border-green-200 text-center">
               <div className="flex justify-center mb-4">
@@ -97,7 +123,10 @@ function Dashboard() {
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="group p-6 rounded-xl border-2 border-gray-200 hover:border-emerald-500 hover:shadow-lg transition duration-200">
+            <button
+              onClick={() => navigate('/inventory')}
+              className="group p-6 rounded-xl border-2 border-gray-200 hover:border-emerald-500 hover:shadow-lg transition duration-200 text-left"
+            >
               <div className="text-5xl mb-4 text-center">📦</div>
               <h3 className="text-xl font-semibold text-gray-800 mb-2 text-center">
                 Grocery Inventory
@@ -106,11 +135,11 @@ function Dashboard() {
                 Upload and manage your grocery inventory to keep track of what's in your fridge
               </p>
               <div className="flex justify-center">
-                <span className="inline-block px-4 py-2 bg-gray-100 text-gray-500 rounded-lg text-sm font-medium">
-                  Coming Soon
+                <span className="inline-block px-4 py-2 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-lg text-sm font-medium group-hover:shadow-md transition">
+                  Manage Inventory →
                 </span>
               </div>
-            </div>
+            </button>
 
             <div className="group p-6 rounded-xl border-2 border-gray-200 hover:border-green-500 hover:shadow-lg transition duration-200">
               <div className="text-5xl mb-4 text-center">🍽️</div>

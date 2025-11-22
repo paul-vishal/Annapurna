@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import Logo from '../components/Logo';
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -47,18 +46,22 @@ function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-amber-50 to-white px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-pink-50 to-white px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-4">
-            <Logo className="w-20 h-20 drop-shadow-lg" />
+            <img
+              src="/Annapurna.png"
+              alt="Annapurna Logo"
+              className="w-32 h-32 drop-shadow-2xl mix-blend-multiply"
+            />
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent mb-2">
-            MealVP
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent mb-4" style={{ fontFamily: "'Dancing Script', cursive" }}>
+            Annapurna
           </h1>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-2">Create Account</h2>
-          <p className="text-gray-600">Start planning your meals today</p>
+          <p className="text-2xl text-gray-600 mb-4" style={{ fontFamily: "'Dancing Script', cursive" }}>Your Divine Kitchen Companion</p>
+          <h2 className="text-2xl font-semibold text-gray-800">Create Account</h2>
         </div>
 
         {/* Card */}
@@ -82,7 +85,7 @@ function Register() {
                 onChange={handleChange}
                 placeholder="John Doe"
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition duration-200 outline-none"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition duration-200 outline-none"
               />
             </div>
 
@@ -98,7 +101,7 @@ function Register() {
                 onChange={handleChange}
                 placeholder="you@example.com"
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition duration-200 outline-none"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition duration-200 outline-none"
               />
             </div>
 
@@ -115,7 +118,7 @@ function Register() {
                 placeholder="••••••••"
                 required
                 minLength="6"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition duration-200 outline-none"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition duration-200 outline-none"
               />
             </div>
 
@@ -132,14 +135,14 @@ function Register() {
                 placeholder="••••••••"
                 required
                 minLength="6"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition duration-200 outline-none"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition duration-200 outline-none"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 bg-gradient-to-r from-orange-600 to-orange-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none mt-6"
+              className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none mt-6"
             >
               {loading ? (
                 <span className="flex items-center justify-center">
@@ -158,7 +161,7 @@ function Register() {
           <div className="mt-6 text-center">
             <p className="text-gray-600">
               Already have an account?{' '}
-              <Link to="/login" className="font-semibold text-orange-600 hover:text-orange-700 transition duration-200">
+              <Link to="/login" className="font-semibold text-purple-600 hover:text-purple-700 transition duration-200">
                 Sign in
               </Link>
             </p>

@@ -74,6 +74,7 @@ router.put('/:id', protect, async (req, res) => {
     item.name = name || item.name;
     item.category = category || item.category;
     item.quantity = quantity !== undefined ? quantity : item.quantity;
+    
     item.unit = unit || item.unit;
     item.expiryDate = expiryDate || item.expiryDate;
     item.notes = notes !== undefined ? notes : item.notes;

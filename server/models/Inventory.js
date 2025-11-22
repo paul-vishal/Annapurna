@@ -13,7 +13,7 @@ const inventoryItemSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['vegetables', 'fruits', 'grains', 'dairy', 'protein', 'spices', 'other'],
+    enum: ['vegetables', 'fruits', 'grains', 'dairy', 'protein', 'oil', 'spices', 'other'],
     default: 'other'
   },
   quantity: {

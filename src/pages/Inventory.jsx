@@ -16,12 +16,14 @@ const COMMON_ITEMS = [
   { name: 'Chicken', category: 'protein', unit: 'kg' },
   { name: 'Paneer', category: 'dairy', unit: 'g' },
   { name: 'Yogurt', category: 'dairy', unit: 'g' },
+  { name: 'Vegetable Oil', category: 'oil', unit: 'liters' },
+  { name: 'Olive Oil', category: 'oil', unit: 'ml' },
   { name: 'Turmeric', category: 'spices', unit: 'g' },
   { name: 'Cumin', category: 'spices', unit: 'g' },
   { name: 'Salt', category: 'spices', unit: 'g' }
 ];
 
-const CATEGORIES = ['vegetables', 'fruits', 'grains', 'dairy', 'protein', 'spices', 'other'];
+const CATEGORIES = ['vegetables', 'fruits', 'grains', 'dairy', 'protein', 'oil', 'spices', 'other'];
 const UNITS = ['kg', 'g', 'lbs', 'oz', 'liters', 'ml', 'pieces', 'cups'];
 
 function Inventory() {
@@ -155,6 +157,7 @@ function Inventory() {
       grains: 'bg-yellow-100 text-yellow-800',
       dairy: 'bg-blue-100 text-blue-800',
       protein: 'bg-red-100 text-red-800',
+      oil: 'bg-amber-100 text-amber-800',
       spices: 'bg-orange-100 text-orange-800',
       other: 'bg-gray-100 text-gray-800'
     };

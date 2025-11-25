@@ -88,4 +88,37 @@ router.get('/me', protect, async (req, res) => {
   }
 });
 
+// @route   PUT /api/auth/preferences
+// @desc    Update user preferences
+// @access  Private
+router.put('/preferences', protect, async (req, res) => {
+  try {
+    const { dietaryRestrictions, allergies, favoriteCuisines } = req.body;
+
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update preferences
+    if (dietaryRestrictions !== undefined) {
+      user.preferences.dietaryRestrictions = dietaryRestrictions;
+    }
+    if (allergies !== undefined) {
+      user.preferences.allergies = allergies;
+    }
+    if (favoriteCuisines !== undefined) {
+      user.preferences.favoriteCuisines = favoriteCuisines;
+    }
+
+    await user.save();
+
+    res.json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error updating preferences' });
+  }
+});
+
 module.exports = router;

@@ -102,16 +102,23 @@ function Dashboard() {
               </span>
             </div>
 
-            <div className="bg-gradient-to-br from-rose-50 to-rose-100 p-6 rounded-xl border border-rose-200 text-center">
+            <button
+              onClick={() => navigate('/profile')}
+              className="bg-gradient-to-br from-rose-50 to-rose-100 p-6 rounded-xl border border-rose-200 text-center hover:shadow-lg hover:border-rose-400 transition duration-200 cursor-pointer"
+            >
               <div className="flex justify-center mb-4">
                 <span className="text-5xl">⭐</span>
               </div>
               <h3 className="text-lg font-semibold text-gray-800 mb-2">Preferences</h3>
-              <p className="text-4xl font-bold text-rose-600 mb-3">0</p>
+              <p className="text-4xl font-bold text-rose-600 mb-3">
+                {(user?.preferences?.dietaryRestrictions?.length || 0) +
+                 (user?.preferences?.allergies?.length || 0) +
+                 (user?.preferences?.favoriteCuisines?.length || 0)}
+              </p>
               <span className="inline-block text-xs font-semibold text-rose-700 bg-rose-200 px-3 py-1 rounded-full">
-                Coming Soon
+                Click to Manage
               </span>
-            </div>
+            </button>
           </div>
         </div>
 
@@ -158,7 +165,10 @@ function Dashboard() {
               </div>
             </div>
 
-            <div className="group p-6 rounded-xl border-2 border-gray-200 hover:border-purple-500 hover:shadow-lg transition duration-200">
+            <button
+              onClick={() => navigate('/profile')}
+              className="group p-6 rounded-xl border-2 border-gray-200 hover:border-purple-500 hover:shadow-lg transition duration-200 text-left"
+            >
               <div className="text-5xl mb-4 text-center">⭐</div>
               <h3 className="text-xl font-semibold text-gray-800 mb-2 text-center">
                 Dietary Preferences
@@ -167,11 +177,11 @@ function Dashboard() {
                 Set your dietary preferences and restrictions for tailored recommendations
               </p>
               <div className="flex justify-center">
-                <span className="inline-block px-4 py-2 bg-gray-100 text-gray-500 rounded-lg text-sm font-medium">
-                  Coming Soon
+                <span className="inline-block px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg text-sm font-medium group-hover:shadow-md transition">
+                  Manage Preferences →
                 </span>
               </div>
-            </div>
+            </button>
           </div>
         </div>
       </main>

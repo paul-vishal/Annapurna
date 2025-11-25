@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import ReceiptScanner from '../components/ReceiptScanner';
+import BatchReviewModal from '../components/BatchReviewModal';
 
 const COMMON_ITEMS = [
   { name: 'Onion', category: 'vegetables', unit: 'kg', icon: '🧅' },
@@ -37,7 +39,7 @@ const COMMON_ITEMS = [
   { name: 'Chili Powder', category: 'spices', unit: 'g', icon: '🌶️' }
 ];
 
-const CATEGORIES = ['vegetables', 'fruits', 'grains', 'dairy', 'protein', 'oil', 'spices', 'other'];
+const CATEGORIES = ['vegetables', 'fruits', 'grains', 'dairy', 'protein', 'oil', 'spices', 'nuts', 'other'];
 const UNITS = ['kg', 'g', 'lbs', 'oz', 'liters', 'ml', 'pieces', 'cups'];
 
 function Inventory() {
@@ -47,6 +49,9 @@ function Inventory() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [showReceiptScanner, setShowReceiptScanner] = useState(false);
+  const [showBatchReview, setShowBatchReview] = useState(false);
+  const [parsedItems, setParsedItems] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     category: 'other',
@@ -164,6 +169,19 @@ function Inventory() {
     });
   };
 
+  const handleReceiptParsed = (items) => {
+    setParsedItems(items);
+    setShowReceiptScanner(false);
+    setShowBatchReview(true);
+  };
+
+  const handleBatchImportSuccess = (data) => {
+    setShowBatchReview(false);
+    setParsedItems([]);
+    fetchInventory();
+    alert(`Successfully added ${data.items.length} items to your inventory!`);
+  };
+
   const getCategoryColor = (category) => {
     const colors = {
       vegetables: 'bg-lime-100 text-lime-800',
@@ -173,6 +191,7 @@ function Inventory() {
       protein: 'bg-red-100 text-red-800',
       oil: 'bg-amber-100 text-amber-800',
       spices: 'bg-orange-100 text-purple-800',
+      nuts: 'bg-amber-100 text-amber-900',
       other: 'bg-gray-100 text-gray-800'
     };
     return colors[category] || colors.other;
@@ -228,12 +247,21 @@ function Inventory() {
             <h2 className="text-2xl font-bold text-gray-800">Your Pantry</h2>
             <p className="text-gray-600 mt-1">Manage your grocery items</p>
           </div>
-          <button
-            onClick={() => setShowModal(true)}
-            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition duration-200"
-          >
-            + Add Custom Item
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowReceiptScanner(true)}
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition duration-200 flex items-center gap-2"
+            >
+              <span className="text-xl">📸</span>
+              Scan Receipt
+            </button>
+            <button
+              onClick={() => setShowModal(true)}
+              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition duration-200"
+            >
+              + Add Custom Item
+            </button>
+          </div>
         </div>
 
         {/* Common Items Quick Add */}
@@ -338,7 +366,7 @@ function Inventory() {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Add/Edit Item Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
@@ -439,6 +467,26 @@ function Inventory() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Receipt Scanner Modal */}
+      {showReceiptScanner && (
+        <ReceiptScanner
+          onItemsParsed={handleReceiptParsed}
+          onClose={() => setShowReceiptScanner(false)}
+        />
+      )}
+
+      {/* Batch Review Modal */}
+      {showBatchReview && (
+        <BatchReviewModal
+          items={parsedItems}
+          onSuccess={handleBatchImportSuccess}
+          onClose={() => {
+            setShowBatchReview(false);
+            setParsedItems([]);
+          }}
+        />
       )}
     </div>
   );

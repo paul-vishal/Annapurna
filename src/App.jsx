@@ -4,6 +4,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Inventory from './pages/Inventory';
 import Profile from './pages/Profile';
+import MealRecommendations from './pages/MealRecommendations';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
@@ -34,6 +35,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/meals"
+          element={
+            <ProtectedRoute>
+              <MealRecommendations />
             </ProtectedRoute>
           }
         />

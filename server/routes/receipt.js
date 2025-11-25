@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const Anthropic = require('@anthropic-ai/sdk');
 const { protect } = require('../middleware/auth');
+const rateLimiter = require('../middleware/rateLimiter');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -30,7 +31,8 @@ const anthropic = new Anthropic({
 // @route   POST /api/receipt/parse
 // @desc    Parse receipt image and extract grocery items
 // @access  Private
-router.post('/parse', protect, upload.single('receipt'), async (req, res) => {
+// Rate limit: 5 requests per minute to reduce API costs
+router.post('/parse', protect, rateLimiter({ windowMs: 60 * 1000, maxRequests: 5 }), upload.single('receipt'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'Please upload a receipt image' });
@@ -50,9 +52,10 @@ router.post('/parse', protect, upload.single('receipt'), async (req, res) => {
     console.log('Processing receipt image...');
 
     // Call Claude API with vision to parse the receipt
+    // Using Haiku for cost optimization - receipt parsing is a simple task
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 2048,
+      model: 'claude-3-5-haiku-20241022',
+      max_tokens: 1500,
       messages: [
         {
           role: 'user',

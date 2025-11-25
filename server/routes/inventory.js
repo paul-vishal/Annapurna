@@ -101,4 +101,76 @@ router.delete('/:id', protect, async (req, res) => {
   }
 });
 
+// @route   POST /api/inventory/batch
+// @desc    Add multiple inventory items at once
+// @access  Private
+router.post('/batch', protect, async (req, res) => {
+  try {
+    const { items } = req.body;
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: 'Please provide an array of items' });
+    }
+
+    const createdItems = [];
+    const errors = [];
+
+    for (let i = 0; i < items.length; i++) {
+      const itemData = items[i];
+
+      try {
+        // Check if item already exists for this user
+        const existingItem = await InventoryItem.findOne({
+          user: req.user._id,
+          name: new RegExp(`^${itemData.name}$`, 'i'),
+          unit: itemData.unit || 'units'
+        });
+
+        if (existingItem) {
+          // Merge quantities if item exists
+          existingItem.quantity = Number(existingItem.quantity) + Number(itemData.quantity || 1);
+          if (itemData.expiryDate) {
+            existingItem.expiryDate = itemData.expiryDate;
+          }
+          if (itemData.notes) {
+            existingItem.notes = itemData.notes;
+          }
+          if (itemData.category) {
+            existingItem.category = itemData.category;
+          }
+          await existingItem.save();
+          createdItems.push(existingItem);
+        } else {
+          // Create new item
+          const newItem = await InventoryItem.create({
+            user: req.user._id,
+            name: itemData.name,
+            category: itemData.category || 'Other',
+            quantity: itemData.quantity || 1,
+            unit: itemData.unit || 'units',
+            expiryDate: itemData.expiryDate,
+            notes: itemData.notes
+          });
+          createdItems.push(newItem);
+        }
+      } catch (itemError) {
+        errors.push({
+          item: itemData.name,
+          error: itemError.message
+        });
+      }
+    }
+
+    res.status(201).json({
+      success: true,
+      message: `Added ${createdItems.length} items successfully`,
+      items: createdItems,
+      errors: errors.length > 0 ? errors : undefined
+    });
+  } catch (error) {
+    console.error('Batch import error:', error);
+    res.status(500).json({ message: 'Server error during batch import' });
+  }
+});
+
 module.exports = router;

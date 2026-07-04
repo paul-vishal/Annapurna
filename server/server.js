@@ -20,9 +20,13 @@ app.use(express.json());
 const authRoutes = require('./routes/auth');
 const inventoryRoutes = require('./routes/inventory');
 const receiptRoutes = require('./routes/receipt');
+const preferencesRoutes = require('./routes/preferences');
+const mealsRoutes = require('./routes/meals');
 app.use('/api/auth', authRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/receipt', receiptRoutes);
+app.use('/api/preferences', preferencesRoutes);
+app.use('/api/meals', mealsRoutes);
 
 // Test route
 app.get('/api/health', (req, res) => {

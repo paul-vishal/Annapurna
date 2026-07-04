@@ -150,7 +150,10 @@ function Dashboard() {
               </div>
             </button>
 
-            <div className="group p-6 rounded-xl border-2 border-gray-200 hover:border-purple-500 hover:shadow-lg transition duration-200">
+            <button
+              onClick={() => navigate('/meals')}
+              className="group p-6 rounded-xl border-2 border-gray-200 hover:border-purple-500 hover:shadow-lg transition duration-200 text-left"
+            >
               <div className="text-5xl mb-4 text-center">🍽️</div>
               <h3 className="text-xl font-semibold text-gray-800 mb-2 text-center">
                 Meal Recommendations
@@ -159,11 +162,11 @@ function Dashboard() {
                 Get personalized meal suggestions based on your inventory and preferences
               </p>
               <div className="flex justify-center">
-                <span className="inline-block px-4 py-2 bg-gray-100 text-gray-500 rounded-lg text-sm font-medium">
-                  Coming Soon
+                <span className="inline-block px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg text-sm font-medium group-hover:shadow-md transition">
+                  Get Recommendations →
                 </span>
               </div>
-            </div>
+            </button>
 
             <button
               onClick={() => navigate('/profile')}

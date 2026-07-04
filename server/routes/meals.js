@@ -6,128 +6,133 @@ const rateLimiter = require('../middleware/rateLimiter');
 const InventoryItem = require('../models/Inventory');
 const UserPreferences = require('../models/UserPreferences');
 
-// Initialize Anthropic client
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || ''
 });
 
+// Extracts the next complete JSON object from a string buffer.
+// Returns { object, remaining } — object is null if none found yet.
+function extractNextObject(str) {
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  let start = -1;
+
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i];
+
+    if (escaped) { escaped = false; continue; }
+    if (ch === '\\' && inString) { escaped = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+
+    if (ch === '{') {
+      if (depth === 0) start = i;
+      depth++;
+    } else if (ch === '}') {
+      depth--;
+      if (depth === 0 && start !== -1) {
+        try {
+          const obj = JSON.parse(str.substring(start, i + 1));
+          return { object: obj, remaining: str.substring(i + 1) };
+        } catch {
+          start = -1;
+        }
+      }
+    }
+  }
+
+  return { object: null, remaining: str };
+}
+
 // @route   POST /api/meals/recommendations
-// @desc    Get meal recommendations based on inventory and preferences
+// @desc    Stream meal recommendations via SSE
 // @access  Private
-// Rate limit: 3 requests per minute to reduce API costs
+// Rate limit: 3 requests per minute
 router.post('/recommendations', protect, rateLimiter({ windowMs: 60 * 1000, maxRequests: 3 }), async (req, res) => {
-  try {
-    // Check if API key is configured
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return res.status(500).json({
-        message: 'AI service not configured. Please add ANTHROPIC_API_KEY to .env file'
-      });
-    }
-
-    // Get user's inventory
-    const inventory = await InventoryItem.find({ user: req.user._id });
-
-    if (inventory.length === 0) {
-      return res.status(400).json({
-        message: 'No items in inventory. Please add items first.'
-      });
-    }
-
-    // Get user preferences (from database or request body override)
-    let preferences = await UserPreferences.findOne({ user: req.user._id });
-
-    // Allow override from request body
-    if (req.body.preferences) {
-      preferences = { ...preferences?._doc, ...req.body.preferences };
-    }
-
-    // Set defaults if no preferences
-    if (!preferences) {
-      preferences = {
-        dietaryRestrictions: [],
-        allergies: [],
-        cuisinePreferences: ['any'],
-        spiceLevel: 'medium',
-        cookingTime: 'any',
-        skillLevel: 'any',
-        servings: 2,
-        avoidIngredients: []
-      };
-    }
-
-    // Format inventory for AI
-    const inventoryList = inventory.map(item => {
-      const expiryInfo = item.expiryDate ? {
-        expiryDate: item.expiryDate,
-        daysUntilExpiry: Math.ceil((new Date(item.expiryDate) - new Date()) / (1000 * 60 * 60 * 24))
-      } : null;
-
-      return {
-        name: item.name,
-        quantity: item.quantity,
-        unit: item.unit,
-        category: item.category,
-        ...expiryInfo
-      };
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return res.status(500).json({
+      message: 'AI service not configured. Please add ANTHROPIC_API_KEY to .env file'
     });
+  }
 
-    // Sort by expiry date (items expiring soon first)
-    inventoryList.sort((a, b) => {
-      if (!a.daysUntilExpiry) return 1;
-      if (!b.daysUntilExpiry) return -1;
-      return a.daysUntilExpiry - b.daysUntilExpiry;
+  const inventory = await InventoryItem.find({ user: req.user._id });
+  if (inventory.length === 0) {
+    return res.status(400).json({
+      message: 'No items in inventory. Please add items first.'
     });
+  }
 
-    console.log('Requesting meal recommendations...');
+  let preferences = await UserPreferences.findOne({ user: req.user._id });
+  if (req.body.preferences) {
+    preferences = { ...preferences?._doc, ...req.body.preferences };
+  }
+  if (!preferences) {
+    preferences = {
+      dietaryRestrictions: [],
+      allergies: [],
+      cuisinePreferences: ['any'],
+      spiceLevel: 'medium',
+      cookingTime: 'any',
+      skillLevel: 'any',
+      servings: 2,
+      avoidIngredients: []
+    };
+  }
 
-    // Build system prompt (cacheable) and user content (dynamic)
-    // Using prompt caching to reduce costs on repeated requests
-    const systemInstructions = `You are a creative chef and meal planning expert. Based on the user's available ingredients and preferences, suggest 3-5 delicious meals they can prepare.
+  const inventoryList = inventory.map(item => {
+    const expiryInfo = item.expiryDate ? {
+      expiryDate: item.expiryDate,
+      daysUntilExpiry: Math.ceil((new Date(item.expiryDate) - new Date()) / (1000 * 60 * 60 * 24))
+    } : null;
+    return { name: item.name, quantity: item.quantity, unit: item.unit, category: item.category, ...expiryInfo };
+  });
 
-**IMPORTANT INSTRUCTIONS:**
-1. Prioritize using ingredients that are expiring soon (marked with ⚠️)
-2. Suggest meals that use as many available ingredients as possible
-3. Respect all dietary restrictions and allergies
-4. For each meal, clearly indicate which ingredients the user HAS vs which they NEED to buy
-5. Include step-by-step cooking instructions
-6. Provide estimated nutritional information (calories, protein, carbs, fat)
-7. Include cooking time and difficulty level
-8. If using an expiring ingredient, add a note about it
+  inventoryList.sort((a, b) => {
+    if (!a.daysUntilExpiry) return 1;
+    if (!b.daysUntilExpiry) return -1;
+    return a.daysUntilExpiry - b.daysUntilExpiry;
+  });
 
-Return ONLY a valid JSON array with no additional text or markdown formatting. Format:
+  // All validation passed — switch to SSE
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  const send = (data) => res.write(`data: ${JSON.stringify(data)}\n\n`);
+
+  const systemInstructions = `You are a creative chef. Suggest 3 meals based on the user's pantry and preferences.
+
+Rules:
+- Start your response immediately with [ — no preamble or explanation
+- Output each complete recipe object before starting the next
+- Prioritize ingredients expiring soon (marked ⚠️)
+- Use as many available ingredients as possible
+- Strictly respect dietary restrictions and allergies
+- Set expiryNote to null if no expiring ingredients are used
+
+Output ONLY a raw JSON array — no markdown, no code fences. Schema:
 [
   {
-    "name": "Recipe Name",
-    "description": "Brief appetizing description",
-    "cuisine": "Cuisine type",
-    "prepTime": "15 min",
-    "cookTime": "30 min",
-    "totalTime": "45 min",
+    "name": "string",
+    "description": "one sentence",
+    "cuisine": "string",
+    "prepTime": "X min",
+    "cookTime": "X min",
+    "totalTime": "X min",
     "difficulty": "easy|medium|hard",
     "servings": 2,
-    "ingredientsAvailable": [
-      {"name": "Ingredient name", "quantity": "amount needed", "have": "amount you have"}
-    ],
-    "ingredientsNeeded": [
-      {"name": "Ingredient to buy", "quantity": "amount needed", "estimated": true}
-    ],
-    "expiryNote": "Using tomatoes that expire in 2 days" or null,
-    "instructions": [
-      "Step 1...",
-      "Step 2..."
-    ],
-    "nutrition": {
-      "calories": 450,
-      "protein": "25g",
-      "carbs": "40g",
-      "fat": "15g",
-      "fiber": "8g"
-    },
-    "tags": ["quick", "healthy", "vegetarian"]
+    "ingredientsAvailable": [{"name": "string", "quantity": "string", "have": "string"}],
+    "ingredientsNeeded": [{"name": "string", "quantity": "string"}],
+    "expiryNote": "string or null",
+    "instructions": ["Step 1", "Step 2"],
+    "nutrition": {"calories": 0, "protein": "0g", "carbs": "0g", "fat": "0g", "fiber": "0g"},
+    "tags": ["string"]
   }
 ]`;
 
-    const userContent = `**AVAILABLE INGREDIENTS:**
+  const userContent = `**AVAILABLE INGREDIENTS:**
 ${inventoryList.map(item => {
   let line = `- ${item.name}: ${item.quantity} ${item.unit}`;
   if (item.daysUntilExpiry !== undefined && item.daysUntilExpiry <= 7) {
@@ -146,72 +151,52 @@ ${inventoryList.map(item => {
 - Servings Needed: ${preferences.servings || 2}
 - Ingredients to Avoid: ${preferences.avoidIngredients?.length > 0 ? preferences.avoidIngredients.join(', ') : 'None'}`;
 
-    // Call Claude API with prompt caching
-    // System instructions are cached, reducing costs on repeated requests
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 3500,
-      system: [
-        {
-          type: 'text',
-          text: systemInstructions,
-          cache_control: { type: 'ephemeral' }
+  console.log('Streaming meal recommendations...');
+
+  try {
+    const controller = new AbortController();
+    req.on('close', () => controller.abort());
+
+    const stream = await anthropic.messages.stream(
+      {
+        model: 'claude-sonnet-4-6',
+        max_tokens: 2000,
+        system: [{ type: 'text', text: systemInstructions, cache_control: { type: 'ephemeral' } }],
+        messages: [{ role: 'user', content: userContent }]
+      },
+      { signal: controller.signal }
+    );
+
+    let buffer = '';
+
+    stream.on('text', (text) => {
+      buffer += text;
+      let result;
+      do {
+        result = extractNextObject(buffer);
+        if (result.object) {
+          send({ type: 'recipe', recipe: result.object });
+          buffer = result.remaining;
         }
-      ],
-      messages: [
-        {
-          role: 'user',
-          content: userContent
-        }
-      ]
+      } while (result.object);
     });
 
-    // Extract the response text
-    const responseText = message.content[0].text;
-    console.log('AI Response received');
-
-    // Parse the JSON response
-    let recommendations;
-    try {
-      // Remove markdown code blocks if present
-      const cleanedResponse = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      recommendations = JSON.parse(cleanedResponse);
-    } catch (parseError) {
-      console.error('Error parsing AI response:', parseError);
-      return res.status(500).json({
-        message: 'Failed to parse meal recommendations',
-        debug: responseText
-      });
-    }
-
-    // Validate the response
-    if (!Array.isArray(recommendations)) {
-      return res.status(500).json({
-        message: 'Invalid response format from AI',
-        debug: recommendations
-      });
-    }
-
-    res.json({
-      success: true,
-      message: `Generated ${recommendations.length} meal recommendations`,
-      recommendations,
-      inventory: inventoryList
+    stream.on('finalMessage', () => {
+      send({ type: 'done', inventory: inventoryList });
+      res.end();
     });
 
+    stream.on('error', (err) => {
+      if (err.name !== 'APIUserAbortError') {
+        console.error('Stream error:', err);
+        send({ type: 'error', message: err.message });
+      }
+      res.end();
+    });
   } catch (error) {
     console.error('Meal recommendation error:', error);
-
-    if (error.status === 401) {
-      return res.status(500).json({
-        message: 'Invalid AI API key. Please check your ANTHROPIC_API_KEY in .env file'
-      });
-    }
-
-    res.status(500).json({
-      message: 'Error generating meal recommendations',
-      error: error.message
-    });
+    send({ type: 'error', message: error.status === 401 ? 'Invalid AI API key' : error.message });
+    res.end();
   }
 });
 

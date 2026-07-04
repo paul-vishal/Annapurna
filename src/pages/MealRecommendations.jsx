@@ -42,14 +42,11 @@ function MealRecommendations() {
   };
 
   const getMealRecommendations = async (overridePrefs = null, forceRefresh = false) => {
-    // Debouncing: prevent duplicate requests within DEBOUNCE_TIME
     const now = Date.now();
     if (lastRequestRef.current && (now - lastRequestRef.current) < DEBOUNCE_TIME) {
-      console.log('Request debounced - too soon after last request');
       return;
     }
 
-    // Check cache: if we have recent data and not forcing refresh, use it
     if (!forceRefresh && cachedData && cacheTimestamp && (now - cacheTimestamp) < CACHE_DURATION) {
       console.log('Using cached recommendations (age: ' + Math.round((now - cacheTimestamp) / 1000) + 's)');
       setRecommendations(cachedData);
@@ -60,6 +57,7 @@ function MealRecommendations() {
     lastRequestRef.current = now;
     setLoading(true);
     setError('');
+    setRecommendations([]);
 
     try {
       const body = overridePrefs ? { preferences: overridePrefs } : {};
@@ -73,15 +71,45 @@ function MealRecommendations() {
         body: JSON.stringify(body)
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setRecommendations(data.recommendations);
-        // Cache the results
-        setCachedData(data.recommendations);
-        setCacheTimestamp(Date.now());
-      } else {
+      // Non-SSE error (validation failed before streaming started)
+      if (!response.ok) {
+        const data = await response.json();
         setError(data.message || 'Failed to get recommendations');
+        return;
+      }
+
+      // Read SSE stream and render recipes as they arrive
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let sseBuffer = '';
+      const received = [];
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        sseBuffer += decoder.decode(value, { stream: true });
+        const messages = sseBuffer.split('\n\n');
+        sseBuffer = messages.pop();
+
+        for (const message of messages) {
+          const line = message.trim();
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const data = JSON.parse(line.slice(6));
+            if (data.type === 'recipe') {
+              received.push(data.recipe);
+              setRecommendations([...received]);
+            } else if (data.type === 'done') {
+              setCachedData([...received]);
+              setCacheTimestamp(Date.now());
+            } else if (data.type === 'error') {
+              setError(data.message || 'Failed to get recommendations');
+            }
+          } catch (e) {
+            console.error('Failed to parse SSE message', e);
+          }
+        }
       }
     } catch (err) {
       console.error('Error getting recommendations:', err);
@@ -171,7 +199,7 @@ function MealRecommendations() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Generating...
+                  {recommendations.length > 0 ? `${recommendations.length} ready...` : 'Generating...'}
                 </>
               ) : (
                 <>
@@ -199,10 +227,7 @@ function MealRecommendations() {
         {recommendations.length > 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {recommendations.map((meal, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100 hover:shadow-2xl transition duration-200"
-              >
+              <div key={index} className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100 hover:shadow-2xl transition duration-200">
                 {/* Meal Header */}
                 <div className="mb-4">
                   <div className="flex justify-between items-start mb-2">
@@ -305,6 +330,16 @@ function MealRecommendations() {
                 </button>
               </div>
             ))}
+            {loading && (
+              <div className="bg-white rounded-2xl shadow-xl p-6 border border-purple-100 flex flex-col items-center justify-center gap-3 min-h-[120px]">
+                <div className="flex gap-1.5">
+                  <span className="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-2.5 h-2.5 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+                <p className="text-sm text-gray-500 font-medium">Finding more recipes for you...</p>
+              </div>
+            )}
           </div>
         ) : (
           <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
